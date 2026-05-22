@@ -3,8 +3,7 @@
  */
 
 // API Base URL (relative)
-// API Base URL (relative)
-const API_URL = '/api';
+const API_URL = 'http://localhost:8080/api';
 
 // State
 let allProducts = [];
@@ -143,7 +142,7 @@ function renderProducts() {
     filtered.forEach(product => {
         const card = document.createElement('div');
         card.className = 'product-card';
-        const displayImg = product.images && product.images[0] ? `../${product.images[0]}` : '../placeholder.png';
+        const displayImg = product.images && product.images[0] ? `${product.images[0]}` : '';
 
         card.innerHTML = `
             <div class="card-img-container">
@@ -203,8 +202,13 @@ function setupNavigation() {
 // Modal & Form Logic
 const modal = document.getElementById('product-modal');
 const form = document.getElementById('product-form');
-const imageInput = document.getElementById('image-input');
-let activeImageSlot = 0;
+const urlInputs = [
+    document.getElementById('img-url-0'),
+    document.getElementById('img-url-1'),
+    document.getElementById('img-url-2'),
+    document.getElementById('img-url-3'),
+    document.getElementById('img-url-4')
+];
 
 function openModal(product) {
     const titleEl = document.getElementById('modal-title');
@@ -226,10 +230,14 @@ function openModal(product) {
         for (let i = 0; i < 5; i++) {
             if (product.images && product.images[i]) {
                 tempImages[i] = product.images[i];
+                urlInputs[i].value = product.images[i];
+            } else {
+                urlInputs[i].value = '';
             }
         }
     } else {
         titleEl.innerText = 'Add New Product';
+        for (let i = 0; i < 5; i++) urlInputs[i].value = '';
         // Defaults
     }
 
@@ -244,52 +252,14 @@ function closeModal() {
 document.getElementById('close-modal').addEventListener('click', closeModal);
 document.getElementById('cancel-modal').addEventListener('click', closeModal);
 
-// Image Upload Handling
+// Image URL Handling
 const previewBoxes = document.querySelectorAll('.img-preview-box');
-previewBoxes.forEach(box => {
-    box.addEventListener('click', () => {
-        activeImageSlot = parseInt(box.getAttribute('data-index'));
-        imageInput.click();
+urlInputs.forEach((input, index) => {
+    input.addEventListener('input', (e) => {
+        const url = e.target.value.trim();
+        tempImages[index] = url ? url : null;
+        renderImagePreviews();
     });
-});
-
-imageInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Convert to Base64
-    const reader = new FileReader();
-    reader.onload = async () => {
-        const base64String = reader.result.split(',')[1]; // Remove data:image/...;base64, prefix
-        const filename = file.name;
-
-        try {
-            previewBoxes[activeImageSlot].innerHTML = `<span>Uploading...</span>`;
-
-            const response = await fetch(`${API_URL}/upload`, {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                body: JSON.stringify({ filename, image: base64String })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                tempImages[activeImageSlot] = data.filepath;
-                renderImagePreviews();
-            } else {
-                showNotification('Upload failed', true);
-                renderImagePreviews();
-            }
-        } catch (error) {
-            console.error('Upload error:', error);
-            showNotification('Upload error', true);
-            renderImagePreviews();
-        }
-    };
-    reader.readAsDataURL(file);
-
-    // Reset input
-    imageInput.value = '';
 });
 
 function renderImagePreviews() {
@@ -297,7 +267,7 @@ function renderImagePreviews() {
         const path = tempImages[index];
         box.innerHTML = '';
         if (path) {
-            const displayPath = `../${path}`;
+            const displayPath = `${path}`;
             box.innerHTML = `<img src="${displayPath}">`;
         } else {
             box.innerHTML = `<span>${index === 0 ? 'Main' : (index === 1 ? 'Hover' : index + 1)}</span>`;

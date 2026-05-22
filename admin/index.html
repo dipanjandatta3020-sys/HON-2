@@ -18,7 +18,7 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-header">
-            <img src="../Logo_HON-removebg-preview (1).png" alt="Logo" class="logo-icon">
+            <img src="https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/Logo_HON-removebg-preview%20%281%29.png" alt="Logo" class="logo-icon">
             <span class="brand-name">HON Admin</span>
         </div>
 
@@ -159,7 +159,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Images (Click to Upload/Change)</label>
+                    <label>Image URLs (Paste GitHub Raw URL or any direct image URL)</label>
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;">
+                        <input type="text" id="img-url-0" placeholder="Main Image URL" class="url-input" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                        <input type="text" id="img-url-1" placeholder="Hover Image URL" class="url-input" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                        <input type="text" id="img-url-2" placeholder="Image 3 URL" class="url-input" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                        <input type="text" id="img-url-3" placeholder="Image 4 URL" class="url-input" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                        <input type="text" id="img-url-4" placeholder="Image 5 URL" class="url-input" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                    </div>
                     <div class="image-upload-container">
                         <!-- 5 slots -->
                         <div class="img-preview-box" data-index="0" id="img-slot-0">
@@ -178,7 +185,6 @@
                             <span>5</span>
                         </div>
                     </div>
-                    <input type="file" id="image-input" hidden accept="image/*">
                 </div>
 
                 <div class="form-group">

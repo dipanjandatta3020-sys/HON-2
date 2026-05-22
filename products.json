@@ -8,8 +8,8 @@
     "isBestSeller": true,
     "isBambooGift": true,
     "images": [
-      "BEST SELLER/4. Bamboo Chairs/1.png",
-      "BEST SELLER/4. Bamboo Chairs/2.png"
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/4.%20Bamboo%20Chairs/1.png",
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/4.%20Bamboo%20Chairs/2.png"
     ]
   },
   {
@@ -18,8 +18,8 @@
     "price": 1200,
     "category": "furniture",
     "images": [
-      "BEST SELLER/2. Bamboo Stools/1.png",
-      "BEST SELLER/2. Bamboo Stools/2.png"
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/2.%20Bamboo%20Stools/1.png",
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/2.%20Bamboo%20Stools/2.png"
     ],
     "description": "Eco-friendly bamboo stool.",
     "isBestSeller": true,
@@ -31,8 +31,8 @@
     "price": 1800,
     "category": "lighting",
     "images": [
-      "BEST SELLER/3. Ceiling Bamboo Lamps/1.png",
-      "BEST SELLER/3. Ceiling Bamboo Lamps/2.png"
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/3.%20Ceiling%20Bamboo%20Lamps/1.png",
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/3.%20Ceiling%20Bamboo%20Lamps/2.png"
     ],
     "description": "Elegant ceiling bamboo lamp.",
     "isBestSeller": true,
@@ -44,8 +44,8 @@
     "price": 800,
     "category": "home-decor",
     "images": [
-      "BEST SELLER/8. Bamboo Baskets/1.png",
-      "BEST SELLER/8. Bamboo Baskets/2.png"
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/8.%20Bamboo%20Baskets/1.png",
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/8.%20Bamboo%20Baskets/2.png"
     ],
     "description": "Handwoven bamboo basket.",
     "isBestSeller": true,
@@ -57,8 +57,8 @@
     "price": 150,
     "category": "gifts",
     "images": [
-      "BEST SELLER/5. Bamboo Combs/1.png",
-      "BEST SELLER/5. Bamboo Combs/2.png"
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/5.%20Bamboo%20Combs/1.png",
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/5.%20Bamboo%20Combs/2.png"
     ],
     "description": "Natural bamboo comb.",
     "isBestSeller": true,
@@ -70,8 +70,8 @@
     "price": 450,
     "category": "kitchen-essentials",
     "images": [
-      "BEST SELLER/6. Bamboo Cutlery/1.png",
-      "BEST SELLER/6. Bamboo Cutlery/2.png"
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/6.%20Bamboo%20Cutlery/1.png",
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/6.%20Bamboo%20Cutlery/2.png"
     ],
     "description": "Reusable bamboo cutlery set.",
     "isBestSeller": true,
@@ -83,8 +83,8 @@
     "price": 1500,
     "category": "lighting",
     "images": [
-      "BEST SELLER/7. Bamboo Table Lamp/1.png",
-      "BEST SELLER/7. Bamboo Table Lamp/2.png"
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/7.%20Bamboo%20Table%20Lamp/1.png",
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/7.%20Bamboo%20Table%20Lamp/2.png"
     ],
     "description": "Stylish bamboo table lamp.",
     "isBestSeller": true,
@@ -96,8 +96,8 @@
     "price": 950,
     "category": "bags",
     "images": [
-      "BEST SELLER/1. Floral Bamboo Bags/1.png",
-      "BEST SELLER/1. Floral Bamboo Bags/2.png"
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/1.%20Floral%20Bamboo%20Bags/1.png",
+      "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/1.%20Floral%20Bamboo%20Bags/2.png"
     ],
     "description": "Beautiful floral bamboo bag.",
     "isBestSeller": true,
