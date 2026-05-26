@@ -235,6 +235,49 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self._set_headers(200)
             self.wfile.write(json.dumps({'success': True}).encode())
 
+        # --- ADMIN HERO CONFIG ---
+        elif self.path == '/api/admin/config/hero':
+            if not self._is_admin():
+                self._set_headers(403)
+                self.wfile.write(json.dumps({'success': False, 'message': 'Unauthorized'}).encode())
+                return
+
+            length = int(self.headers['Content-Length'])
+            data = json.loads(self.rfile.read(length).decode())
+            
+            desktop = data.get('desktop', [])
+            mobile = data.get('mobile', [])
+
+            # Validation
+            if not isinstance(desktop, list) or len(desktop) != 3 or not all(isinstance(x, str) and x.strip() for x in desktop):
+                self._set_headers(400)
+                self.wfile.write(json.dumps({'success': False, 'message': 'Invalid desktop images. Must be exactly 3 valid URLs.'}).encode())
+                return
+            
+            if not isinstance(mobile, list) or len(mobile) != 3 or not all(isinstance(x, str) and x.strip() for x in mobile):
+                self._set_headers(400)
+                self.wfile.write(json.dumps({'success': False, 'message': 'Invalid mobile images. Must be exactly 3 valid URLs.'}).encode())
+                return
+
+            try:
+                if os.path.exists(ADMIN_CONFIG_FILE):
+                     with open(ADMIN_CONFIG_FILE, 'r') as f:
+                        try: config = json.load(f)
+                        except: config = {}
+                else: config = {}
+            except: config = {}
+
+            config['hero_images'] = {
+                'desktop': desktop,
+                'mobile': mobile
+            }
+
+            with open(ADMIN_CONFIG_FILE, 'w') as f:
+                json.dump(config, f, indent=2)
+            
+            self._set_headers(200)
+            self.wfile.write(json.dumps({'success': True}).encode())
+
         # --- ADMIN DATA (Read Only - Handled in GET) ---
         elif self.path.startswith('/api/admin/data/'):
              self._set_headers(405) # Method Not Allowed
@@ -633,6 +676,44 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
              key, secret = get_razorpay_creds()
              self._set_headers(200)
              self.wfile.write(json.dumps({'available': bool(key and secret)}).encode())
+
+        # --- HERO CONFIG (PUBLIC) ---
+        elif self.path == '/api/config/hero':
+            try:
+                config = {}
+                if os.path.exists(ADMIN_CONFIG_FILE):
+                     with open(ADMIN_CONFIG_FILE, 'r') as f:
+                        try: config = json.load(f)
+                        except: pass
+                
+                # Sane fallbacks
+                default_desktop = [
+                    "https://res.cloudinary.com/dwchxvpln/image/upload/q_auto/f_auto/v1778827257/Hero_1_tyebo9_469b5c.webp",
+                    "https://res.cloudinary.com/dwchxvpln/image/upload/q_auto/f_auto/v1778827475/Hero_2_jzhmui_c725c5.webp",
+                    "https://res.cloudinary.com/dwchxvpln/image/upload/q_auto/f_auto/v1778827873/Hero_3_etehtr_df7353.webp"
+                ]
+                default_mobile = [
+                    "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/4.%20Bamboo%20Chairs/1.png",
+                    "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/2.%20Bamboo%20Stools/1.png",
+                    "https://raw.githubusercontent.com/dipanjandatta3020-sys/HON-2/main/BEST%20SELLER/3.%20Ceiling%20Bamboo%20Lamps/1.png"
+                ]
+
+                hero_config = config.get('hero_images', {})
+                desktop = hero_config.get('desktop', default_desktop)
+                mobile = hero_config.get('mobile', default_mobile)
+
+                # Validate
+                if len(desktop) != 3 or not all(x.strip() for x in desktop): desktop = default_desktop
+                if len(mobile) != 3 or not all(x.strip() for x in mobile): mobile = default_mobile
+
+                self._set_headers(200)
+                self.wfile.write(json.dumps({
+                    'desktop': desktop,
+                    'mobile': mobile
+                }).encode())
+            except Exception as e:
+                self._set_headers(500)
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
 
         # --- PRODUCTS (GET) ---
         elif self.path == '/api/products':

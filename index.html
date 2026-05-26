@@ -11,15 +11,11 @@
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=7">
+    <link rel="stylesheet" href="hero-slideshow.css">
 </head>
 
 <body>
-    <!-- Preloader Overlay -->
-    <div id="loader-overlay">
-        <div class="loader-spinner"></div>
-        <div class="loader-text">House Of Natures</div>
-        <div class="loader-progress" id="loader-progress">0%</div>
-    </div>
+    <!-- Preloader Overlay Removed -->
     <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="nav-left">
@@ -69,38 +65,38 @@
             style="background:none; border:none; cursor:pointer; font-size:2rem; margin-left:2rem; color:#000;">&times;</button>
     </div>
 
-    <canvas id="hero-canvas"></canvas>
-
-    <!-- Mobile-only scroll hint labels (fade out on first scroll) -->
-    <div id="mobile-scroll-hints">
-        <span id="scroll-hint-top">Stay close to nature</span>
-        <span id="scroll-hint-bottom">Handcrafted bamboo products</span>
-    </div>
-
-    <div class="scroll-container">
-        <!-- Section 1: Bamboo (Raw Material) -->
-        <div class="scroll-section">
-            <div class="content left-aligned fade-in">
-                <h1>Raw Origin</h1>
-                <p>Sustainable bamboo, harvested at peak maturity.</p>
-                <div class="scroll-indicator">Scroll to Explore</div>
+    <!-- Hero Section -->
+    <section class="hero" id="hero" aria-label="Hero">
+        <div class="hero__media">
+            <div class="hero__slider" id="hero-slider">
+                <div class="hero__slide hero__slide--active">
+                    <img src="https://res.cloudinary.com/dwchxvpln/image/upload/q_auto/f_auto/v1778827257/Hero_1_tyebo9_469b5c.webp"
+                        alt="Alfaaz — Limited Edition Collection" class="hero__image" fetchpriority="high" />
+                </div>
+                <div class="hero__slide">
+                    <img src="https://res.cloudinary.com/dwchxvpln/image/upload/q_auto/f_auto/v1778827475/Hero_2_jzhmui_c725c5.webp"
+                        alt="Alfaaz — Elegance Redefined" class="hero__image" />
+                </div>
+                <div class="hero__slide">
+                    <img src="https://res.cloudinary.com/dwchxvpln/image/upload/q_auto/f_auto/v1778827873/Hero_3_etehtr_df7353.webp"
+                        alt="Alfaaz — Crafted for You" class="hero__image" />
+                </div>
             </div>
+            <!-- Dual gradient overlay for cinematic legibility -->
+            <div class="hero__overlay hero__overlay--flat" aria-hidden="true"></div>
+            <div class="hero__overlay hero__overlay--gradient" aria-hidden="true"></div>
         </div>
 
-        <!-- Section 2: Chairs (Craftsmanship) -->
-        <div class="scroll-section">
-            <div class="content right-aligned fade-in">
-                <h1>Refined Form</h1>
-                <p>Precision craftsmanship turns nature into function.</p>
-            </div>
+        <!-- Hero Copy -->
+        <div class="hero__content">
+            <p class="hero__eyebrow">Crafted from Nature</p>
+            <h1 class="hero__headline">Sustainable Design, Naturally</h1>
+            <p class="hero__subtext">Discover thoughtfully crafted bamboo products designed for everyday use, built for durability, and made with a lighter impact on the planet.</p>
+            <a href="#best-sellers" class="hero__cta" role="button">Explore Collection</a>
         </div>
 
-        <!-- Section 3: Brand (Identity) -->
-        <div class="scroll-section">
-            <div class="content center-aligned fade-in">
-            </div>
-        </div>
-    </div>
+    <!-- Scroll indicator removed per user request -->
+    </section>
 
     <!-- Best Sellers Section -->
     <section id="best-sellers">
@@ -396,6 +392,45 @@
     <!-- Scripts -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="script_v2.js?v=6"></script>
+    <script src="hero-slideshow.js"></script>
+    <script>
+        (async function() {
+            try {
+                // Fetch the dynamic configuration
+                const res = await fetch('http://localhost:8080/api/config/hero');
+                const config = await res.json();
+                
+                const mql = window.matchMedia('(max-width: 768px)');
+                
+                function updateHero() {
+                    const isMobile = mql.matches;
+                    const images = isMobile ? config.mobile : config.desktop;
+                    
+                    if (window.initHeroSlideshow) {
+                        window.initHeroSlideshow(images);
+                    }
+                }
+                
+                // Initial evaluation
+                updateHero();
+                
+                // Re-evaluate on breakpoint change
+                if (mql.addEventListener) {
+                    mql.addEventListener('change', updateHero);
+                } else {
+                    // Fallback for older browsers
+                    mql.addListener(updateHero);
+                }
+
+            } catch (err) {
+                console.error("Error loading hero config:", err);
+                // Fallback to initializing with whatever URLs are currently in the DOM
+                if (window.initHeroSlideshow) {
+                    window.initHeroSlideshow();
+                }
+            }
+        })();
+    </script>
 </body>
 
 </html>

@@ -181,9 +181,16 @@ function setupNavigation() {
             const filter = link.getAttribute('data-filter');
             if (filter === 'data') {
                 setupDataView();
+                document.getElementById('hero-view').style.display = 'none';
+            } else if (filter === 'hero') {
+                setupHeroView();
+                document.getElementById('data-view').style.display = 'none';
+                document.getElementById('admin-product-grid').style.display = 'none';
+                document.getElementById('add-product-btn').style.display = 'none';
             } else {
                 // Restore Product View
                 document.getElementById('data-view').style.display = 'none';
+                document.getElementById('hero-view').style.display = 'none';
                 document.getElementById('admin-product-grid').style.display = 'grid'; // grid or flex? Check CSS. Usually grid.
                 document.getElementById('add-product-btn').style.display = 'block';
 
@@ -359,6 +366,7 @@ async function setupDataView() {
     dataView.style.display = 'block';
     productGrid.style.display = 'none';
     addBtn.style.display = 'none'; // Hide Add Product button in Data view
+    document.getElementById('hero-view').style.display = 'none';
     pageTitle.innerText = 'Data Dashboard';
 
     // Tab Click
@@ -375,6 +383,59 @@ async function setupDataView() {
 
     // Load default
     loadData('users');
+}
+
+// --- HERO VIEW LOGIC ---
+async function setupHeroView() {
+    const heroView = document.getElementById('hero-view');
+    const pageTitle = document.getElementById('page-title');
+    
+    heroView.style.display = 'block';
+    pageTitle.innerText = 'Hero Section';
+
+    // Fetch current settings
+    try {
+        const res = await fetch(`${API_URL}/config/hero`);
+        if (res.ok) {
+            const data = await res.json();
+            for (let i = 0; i < 3; i++) {
+                if (data.desktop && data.desktop[i]) document.getElementById(`hero-desktop-${i+1}`).value = data.desktop[i];
+                if (data.mobile && data.mobile[i]) document.getElementById(`hero-mobile-${i+1}`).value = data.mobile[i];
+            }
+        }
+    } catch(e) {
+        console.error('Error fetching hero config:', e);
+    }
+
+    // Save Logic
+    document.getElementById('save-hero-btn').onclick = async () => {
+        const desktop = [
+            document.getElementById('hero-desktop-1').value.trim(),
+            document.getElementById('hero-desktop-2').value.trim(),
+            document.getElementById('hero-desktop-3').value.trim()
+        ];
+        const mobile = [
+            document.getElementById('hero-mobile-1').value.trim(),
+            document.getElementById('hero-mobile-2').value.trim(),
+            document.getElementById('hero-mobile-3').value.trim()
+        ];
+
+        try {
+            const res = await fetch(`${API_URL}/admin/config/hero`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ desktop, mobile })
+            });
+            const result = await res.json();
+            if (result.success) {
+                showNotification('Hero settings saved successfully!');
+            } else {
+                showNotification(result.message || 'Error saving hero settings', true);
+            }
+        } catch(e) {
+            showNotification('Connection error', true);
+        }
+    };
 }
 
 async function setupRazorpayConfig() {
