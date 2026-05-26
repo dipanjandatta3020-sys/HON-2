@@ -397,7 +397,7 @@
         (async function() {
             try {
                 // Fetch the dynamic configuration
-                const res = await fetch('http://localhost:8080/api/config/hero');
+                const res = await fetch('/api/config/hero');
                 const config = await res.json();
                 
                 const mql = window.matchMedia('(max-width: 768px)');
