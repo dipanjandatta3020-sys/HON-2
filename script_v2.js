@@ -1,372 +1,4 @@
 /**
- * Configuration
- */
-const CONFIG = {
-    folderNames: [
-        'HON-1. Bamboo to Chairs',
-        'HON-2. Chairs to Lamps',
-        'HON-3. Lamps to Brand Text'
-    ],
-    framesPerSection: 192,
-    imagePrefix: 'frame_',
-    imageExtension: '.webp',
-    totalSections: 3
-};
-
-/**
- * State
- */
-const state = {
-    images: [],
-    imagesLoaded: 0,
-    totalImages: CONFIG.totalSections * CONFIG.framesPerSection,
-    currentSection: 0,
-    currentFrame: 0,
-    canvas: null,
-    ctx: null,
-    width: 0,
-    height: 0
-};
-
-/**
- * Initialization
- */
-document.addEventListener('DOMContentLoaded', () => {
-    // Force scroll to top on reload
-    if (history.scrollRestoration) {
-        history.scrollRestoration = 'manual';
-    }
-    window.scrollTo(0, 0);
-
-    // --- Animation & Canvas Setup (Homepage Only) ---
-    state.canvas = document.getElementById('hero-canvas');
-    if (state.canvas) {
-        // Disable scrolling ONLY if we are doing the animation
-        document.body.classList.add('noscroll');
-
-        state.ctx = state.canvas.getContext('2d');
-
-        resize();
-        window.addEventListener('resize', resize);
-        window.addEventListener('scroll', handleScroll);
-
-        // Immediate render
-        render();
-
-        preloadImages();
-    } else {
-        // If not on homepage, ensure scrolling is enabled
-        document.body.classList.remove('noscroll');
-    }
-
-    // --- Global Initializations (Run on ALL pages) ---
-    initializeCart();
-    setupNavEvents();
-    setupCartEvents();
-    setupModalEvents();
-
-    // Fetch products for global usage (search, modal, etc.)
-    // Note: shop.html does its own fetch, but this populates 'allProducts' for the modal
-    fetchAndRenderProducts();
-});
-
-/**
- * Image Preloading - Parallel Loading (All images at once)
- */
-function preloadImages() {
-    console.log('[DEBUG] Starting Interlaced Preload...');
-    const loaderProgress = document.getElementById('loader-progress');
-    const loaderOverlay = document.getElementById('loader-overlay');
-
-    let totalOddImages = 0;
-    let loadedOddImages = 0;
-
-    // Calculate total odd images for Phase 1 progress
-    for (let s = 0; s < CONFIG.totalSections; s++) {
-        totalOddImages += Math.ceil(CONFIG.framesPerSection / 2);
-    }
-
-    // Helper to load a batch of frames
-    const loadBatch = (startIndex, step, isPhase1) => {
-        for (let sectionIndex = 0; sectionIndex < CONFIG.totalSections; sectionIndex++) {
-            if (!state.images[sectionIndex]) state.images[sectionIndex] = [];
-
-            for (let f = startIndex; f < CONFIG.framesPerSection; f += step) {
-                // Skip if already exists (safety)
-                if (state.images[sectionIndex][f]) continue;
-
-                const img = new Image();
-                const frameStr = (f + 1).toString().padStart(3, '0');
-                img.src = `${CONFIG.folderNames[sectionIndex]}/${CONFIG.imagePrefix}${frameStr}${CONFIG.imageExtension}`;
-
-                const onImageLoadOrError = () => {
-                    state.imagesLoaded++; // Global total count
-
-                    // PHASE 1 LOGIC
-                    if (isPhase1) {
-                        loadedOddImages++;
-
-                        // Update UI (0-100% based on Phase 1 only)
-                        if (loaderProgress) {
-                            const percent = Math.round((loadedOddImages / totalOddImages) * 100);
-                            loaderProgress.innerText = `${percent}%`;
-                        }
-
-                        // Unlock when Phase 1 complete
-                        if (loadedOddImages === totalOddImages) {
-                            console.log('[SUCCESS] Phase 1 (Odd Frames) Complete! Unlocking...');
-                            if (loaderOverlay) loaderOverlay.classList.add('hidden');
-                            document.body.classList.remove('noscroll');
-
-                            // Start Phase 2 (Even Frames) in background
-                            setTimeout(() => loadBatch(1, 2, false), 100);
-                        }
-                    } else {
-                        // PHASE 2 LOGIC (Background)
-                        if (state.imagesLoaded === state.totalImages) {
-                            console.log('[SUCCESS] All images (Even frames) loaded!');
-                        }
-                    }
-
-                    // Force first frame render
-                    if (sectionIndex === 0 && f === 0) render();
-                };
-
-                img.onload = onImageLoadOrError;
-                img.onerror = () => {
-                    console.warn(`[ERROR] Failed: ${img.src}`);
-                    onImageLoadOrError();
-                };
-
-                state.images[sectionIndex][f] = img;
-            }
-        }
-    };
-
-    // Start Phase 1: Odd frames (Indices 0, 2, 4...)
-    loadBatch(0, 2, true);
-}
-
-/**
- * Resize Handling - High DPI Support
- */
-function resize() {
-    const dpr = window.devicePixelRatio || 1;
-
-    // Logical dimensions
-    const navbar = document.querySelector('.navbar');
-    const navbarHeight = navbar ? navbar.offsetHeight : 0;
-
-    state.width = window.innerWidth;
-    state.height = window.innerHeight - navbarHeight;
-
-    // Set actual canvas size to physical pixels
-    state.canvas.width = state.width * dpr;
-    state.canvas.height = state.height * dpr;
-
-    // Ensure CSS matches logical dimensions
-    state.canvas.style.width = `${state.width}px`;
-    state.canvas.style.height = `${state.height}px`;
-    state.canvas.style.top = `${navbarHeight}px`;
-
-    // Scale context to ensure drawing operations use logical coordinates
-    state.ctx.scale(dpr, dpr);
-
-    render();
-}
-
-/**
- * Scroll Logic
- */
-let ticking = false;
-
-function handleScroll() {
-    if (!ticking) {
-        window.requestAnimationFrame(() => {
-            performScrollCalculations();
-            ticking = false;
-        });
-        ticking = true;
-    }
-}
-
-// Mobile-only: position hint labels at the image boundary lines and toggle on scroll
-document.addEventListener('DOMContentLoaded', function () {
-    const hints = document.getElementById('mobile-scroll-hints');
-    const hintTop = document.getElementById('scroll-hint-top');
-    const hintBottom = document.getElementById('scroll-hint-bottom');
-    if (!hints || !hintTop || !hintBottom) return;
-    if (window.innerWidth > 768) return;
-
-    // Position the hints at the image edges once the first frame renders
-    function positionHints() {
-        if (state.imageTopY !== undefined && state.imageBotY !== undefined) {
-            // Top hint: right-aligned, sitting just above the top line
-            hintTop.style.top = (state.imageTopY - 22) + 'px';
-            // Bottom hint: left-aligned, sitting just below the bottom line
-            hintBottom.style.top = (state.imageBotY + 6) + 'px';
-            hintBottom.style.bottom = 'auto';
-        }
-    }
-
-    // Wait for preloader to finish and first frame to render
-    var posInterval = setInterval(function () {
-        if (state.imageTopY !== undefined) {
-            positionHints();
-            clearInterval(posInterval);
-        }
-    }, 200);
-
-    // Reposition on resize
-    window.addEventListener('resize', function () {
-        setTimeout(positionHints, 100);
-    });
-
-    // Toggle: hide when scrolled, show when scrolled back to top
-    function toggleHints() {
-        if (window.scrollY > 80) {
-            hints.classList.add('hidden');
-        } else {
-            hints.classList.remove('hidden');
-        }
-    }
-
-    // Delay listener attachment until after preloader
-    setTimeout(function () {
-        window.addEventListener('scroll', toggleHints, { passive: true });
-    }, 3000);
-});
-
-function performScrollCalculations() {
-    const scrollY = window.scrollY;
-
-    const scrollContainer = document.querySelector('.scroll-container');
-
-    // If no scroll container (e.g. other pages), do nothing
-    if (!scrollContainer) return;
-
-    const containerHeight = scrollContainer.offsetHeight;
-    const totalScrollRange = containerHeight - window.innerHeight;
-
-    // Buffer at the end (footer area)
-    const buffer = 0; // Remove buffer so animation plays until the very end
-    const animationScrollRange = totalScrollRange - buffer;
-
-    // Normalize scroll 0 to 1 based on the animation range
-    let progress = scrollY / animationScrollRange;
-    if (progress < 0) progress = 0;
-    if (progress > 1) progress = 1;
-
-    // If scrolled PAST the animation range (and buffer is 0), just clamp to 1 (last frame)
-    // We do NOT clearRect so the last frame stays visible behind the next section
-
-    // SCROLL GLITCH FIX: Fade out canvas if past the animation range
-    if (scrollY > animationScrollRange) {
-        state.canvas.style.opacity = '0';
-    } else {
-        state.canvas.style.opacity = '1';
-    }
-
-    // Total frames across all sections
-    const totalFrames = CONFIG.totalSections * CONFIG.framesPerSection;
-
-    // Calculate global frame index
-    let globalFrameIndex = Math.floor(progress * (totalFrames - 1));
-
-    // Determine section and local frame
-    state.currentSection = Math.floor(globalFrameIndex / CONFIG.framesPerSection);
-    state.currentFrame = globalFrameIndex % CONFIG.framesPerSection;
-
-    if (state.currentSection >= CONFIG.totalSections) {
-        state.currentSection = CONFIG.totalSections - 1;
-        state.currentFrame = CONFIG.framesPerSection - 1;
-    }
-
-    render();
-}
-
-/**
- * Rendering
- */
-function render() {
-    if (!state.ctx) return;
-
-    // Clear canvas
-    state.ctx.clearRect(0, 0, state.width, state.height);
-
-    // Check image array
-    if (!state.images[state.currentSection]) {
-        return;
-    }
-
-    // Safety check for frame index
-    const frameIndex = state.currentFrame || 0;
-    let img = state.images[state.currentSection][frameIndex];
-
-    // Fallback for Interlaced Loading (Phase 2 not done yet)
-    // If current frame (Even) is missing/not loaded, use previous frame (Odd)
-    if (!img || !img.complete || img.naturalWidth === 0) {
-        if (frameIndex > 0) {
-            const prevImg = state.images[state.currentSection][frameIndex - 1];
-            if (prevImg && prevImg.complete && prevImg.naturalWidth !== 0) {
-                img = prevImg;
-            }
-        }
-    }
-
-    if (img && img.complete && img.naturalWidth !== 0) {
-        // RESIZE LOGIC: Mobile vs Desktop
-        const isMobile = state.width < 768;
-
-        const aspect = img.naturalWidth / img.naturalHeight;
-        const canvasAspect = state.width / state.height;
-
-        let drawW, drawH, offsetX, offsetY;
-
-        if (isMobile) {
-            // MOBILE: "Contain" logic (Fit entire image)
-            // Use white background
-            state.ctx.fillStyle = '#ffffff';
-            state.ctx.fillRect(0, 0, state.width, state.height);
-
-            // Calculate scale to fit
-            const scale = Math.min(state.width / img.naturalWidth, state.height / img.naturalHeight);
-
-            drawW = img.naturalWidth * scale;
-            drawH = img.naturalHeight * scale;
-
-            // Center
-            offsetX = (state.width - drawW) / 2;
-            offsetY = (state.height - drawH) / 2;
-
-        } else {
-            // DESKTOP: "Cover" logic (Fill screen)
-            if (canvasAspect > aspect) {
-                drawW = state.width;
-                drawH = state.width / aspect;
-                offsetX = 0;
-                offsetY = (state.height - drawH) / 2;
-            } else {
-                drawW = state.height * aspect;
-                drawH = state.height;
-                offsetX = (state.width - drawW) / 2;
-                offsetY = 0;
-            }
-        }
-
-        state.ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
-
-        // Store image boundaries for mobile hint positioning
-        if (isMobile) {
-            const navbar = document.querySelector('.navbar');
-            const navH = navbar ? navbar.offsetHeight : 55;
-            state.imageTopY = navH + offsetY;
-            state.imageBotY = navH + offsetY + drawH;
-        }
-    }
-}
-
-/**
  * Dynamic Product Loading & Interaction Logic
  */
 document.addEventListener('DOMContentLoaded', async () => {
@@ -486,10 +118,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const hoverImg = product.images[1] || defaultImg;
 
         const cardHtml = `
-            <div class="product-card ${isCarousel ? 'carousel-card' : ''}" data-id="${product.id}" onclick="openProductModal('${product.id}')">
+            <div class="product-card ${isCarousel ? 'carousel-card' : ''}" data-id="${product.id}">
                 <div class="product-image">
-                    <img src="${defaultImg}" alt="${product.title}" class="img-default">
-                    <img src="${hoverImg}" alt="${product.title} Hover" class="img-hover">
+                    <img src="${defaultImg}" alt="${product.title}" class="img-default" loading="lazy">
+                    <img src="${hoverImg}" alt="${product.title} Hover" class="img-hover" loading="lazy">
                 </div>
                 <h3 class="product-title">${product.title}</h3>
                 <p class="product-price">₹ ${product.price.toFixed(2)}</p>
@@ -508,11 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Expose to global scope for HTML onclick attributes
-    window.openProductModal = function (productId) {
-        console.log('Navigating to product page for:', productId);
-        window.location.href = `product-details.html?id=${productId}`;
-    };
+
 
     // Quick Buy Function - Add to cart and open checkout
     window.quickBuyProduct = function (productId) {
@@ -823,19 +451,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (menuBtn && leftPanel && overlay) {
             menuBtn.addEventListener('click', () => {
                 leftPanel.classList.add('open');
-                overlay.classList.add('active');
+                overlay.classList.add('open');
             });
 
             if (closeLeftBtn) {
                 closeLeftBtn.addEventListener('click', () => {
                     leftPanel.classList.remove('open');
-                    overlay.classList.remove('active');
+                    overlay.classList.remove('open');
                 });
             }
 
             overlay.addEventListener('click', () => {
                 leftPanel.classList.remove('open');
-                overlay.classList.remove('active');
+                overlay.classList.remove('open');
             });
         }
     }
@@ -1074,6 +702,13 @@ document.addEventListener('DOMContentLoaded', () => {
         checkoutForm.onsubmit = async (e) => {
             e.preventDefault();
 
+            const submitBtn = checkoutForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.dataset.originalText = submitBtn.innerText;
+                submitBtn.innerText = 'Processing...';
+                submitBtn.disabled = true;
+            }
+
             window.checkoutState.userDetails = {
                 name: document.getElementById('cust-name').value.trim(),
                 phone: document.getElementById('cust-phone').value.trim(),
@@ -1081,10 +716,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 address: document.getElementById('cust-address').value.trim()
             };
 
-            if (window.checkoutState.selectedMethod === 'COD') {
-                await processCODOrder();
-            } else if (window.checkoutState.selectedMethod === 'ONLINE') {
-                await processOnlinePayment();
+            try {
+                if (window.checkoutState.selectedMethod === 'COD') {
+                    await processCODOrder();
+                } else if (window.checkoutState.selectedMethod === 'ONLINE') {
+                    await processOnlinePayment();
+                }
+            } finally {
+                if (submitBtn) {
+                    submitBtn.innerText = submitBtn.dataset.originalText;
+                    submitBtn.disabled = false;
+                }
             }
         };
     }
@@ -1093,7 +735,18 @@ document.addEventListener('DOMContentLoaded', () => {
     checkRazorpayAvailability();
 });
 
+function loadRazorpayScript() {
+    if (!document.getElementById('razorpay-checkout-script')) {
+        const script = document.createElement('script');
+        script.id = 'razorpay-checkout-script';
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+    }
+}
+
 function openCheckoutModal() {
+    loadRazorpayScript();
     const modal = document.getElementById('checkout-modal');
     if (modal) {
         modal.style.display = 'flex';

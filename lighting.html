@@ -5,12 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lighting - HON</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta name="description" content="House of Natures - Premium hand-crafted sustainable bamboo furniture, lamps, and eco-friendly products.">
+    <meta property="og:title" content="House of Natures">
+    <meta property="og:description" content="Premium hand-crafted sustainable bamboo furniture and eco-friendly products.">
+    <meta property="og:type" content="website">
+
+    <link rel="icon" type="image/png" href="Logo_HON-removebg-preview (1).png">
+    <meta name="description" content="Lighting - HON - Sustainable bamboo products by House of Natures.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.min.css?v=8">
     <style>
         .category-page {
             padding-top: 120px;
@@ -190,7 +198,7 @@
                     <li><a href="index.html">HOME</a></li>
                     <li><a href="furniture.html">Furniture</a></li>
                     <li><a href="lighting.html">Lighting</a></li>
-                    <li><a href="home-decor.html">Home Decore</a></li>
+                    <li><a href="home-decor.html">Home Decor</a></li>
                     <li><a href="bags.html">Bags</a></li>
                     <li><a href="kitchen-essentials.html">Kitchen Essentials</a></li>
                     <li><a href="gifts.html">Gifts</a></li>
@@ -201,47 +209,7 @@
         </div>
     </div>
 
-    <div class="product-full-page" id="product-full-page">
-        <button class="close-btn" id="close-full-page-btn">&times;</button>
-        <div class="full-page-content">
-            <div class="product-gallery">
-                <div class="main-image-container">
-                    <button class="gallery-nav prev" id="gallery-prev">&lt;</button>
-                    <img id="full-page-product-image" src="" alt="Product Image">
-                    <button class="gallery-nav next" id="gallery-next">&gt;</button>
-                </div>
-                <div class="gallery-thumbnails"></div>
-            </div>
-            <div class="product-details-container">
-                <div class="details-wrapper">
-                    <h1 id="full-page-product-title">Product Title</h1>
-                    <p class="product-price-large" id="full-page-product-price">Rs. 0.00</p>
-                    <p class="tax-note">Tax included.</p>
-                    <div class="product-description">
-                        <p>Evaluate your space with our premium bamboo collection. Hand-crafted with precision and care,
-                            ensuring sustainability and style in every piece.</p>
-                        <ul>
-                            <li>100% Natural Bamboo</li>
-                            <li>Eco-friendly & Sustainable</li>
-                            <li>Hand-crafted finish</li>
-                        </ul>
-                    </div>
-                    <div class="quantity-section">
-                        <label>QUANTITY</label>
-                        <div class="quantity-selector">
-                            <button id="qty-minus-full">-</button>
-                            <input type="number" id="qty-input-full" value="1" min="1" readonly>
-                            <button id="qty-plus-full">+</button>
-                        </div>
-                    </div>
-                    <div class="action-buttons-large">
-                        <button id="add-to-cart-btn-full" class="panel-btn btn-white">ADD TO CART</button>
-                        <button id="buy-now-btn-full" class="panel-btn btn-black">BUY IT NOW</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    
 
     <!-- Checkout Modal -->
     <div id="checkout-modal" class="modal-overlay"
@@ -326,14 +294,9 @@
         <input type="text" id="search-input" placeholder="Search...">
     </div>
 
-    <!-- Search Overlay -->
-    <div id="search-container">
-        <button id="close-search">&times;</button>
-        <input type="text" id="search-input" placeholder="Search...">
-    </div>
 
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <script src="script_v2.js"></script>
+
+    <script src="script_v2.js?v=8" defer></script>
 </body>
 
 </html>

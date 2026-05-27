@@ -8,6 +8,17 @@ import hashlib
 import secrets
 import hmac
 
+import uuid
+from collections import defaultdict
+
+ADMIN_TOKEN = str(uuid.uuid4())
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'gloomhon@gmail.com')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'natureofhouse')
+
+# Rate limiting store
+AUTH_RATE_LIMITS = defaultdict(list)
+
+
 PORT = 8080
 PRODUCTS_FILE = 'products.json'
 USERS_FILE = 'users.json'
@@ -43,9 +54,21 @@ def log_system_action(action_type, description, admin_user="Admin"):
     except Exception as e:
         print(f"Logging failed: {e}")
 
-def hash_password(password):
-    # Simple hash for demo (in prod use salt + bcrypt/argon2)
-    return hashlib.sha256(password.encode()).hexdigest()
+def hash_password(password, salt=""):
+    # Using salt if provided, else empty string for legacy
+    if not salt:
+        return hashlib.sha256(password.encode()).hexdigest()
+    return hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), 100000).hex()
+
+
+def verify_razorpay_signature(order_id, payment_id, signature, secret):
+    generated_signature = hmac.new(
+        secret.encode(),
+        f"{order_id}|{payment_id}".encode(),
+        hashlib.sha256
+    ).hexdigest()
+    # Use hmac.compare_digest to prevent timing attacks
+    return hmac.compare_digest(generated_signature, signature)
 
 def get_razorpay_creds():
     try:
@@ -97,9 +120,23 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         # Expecting "Bearer <token>"
         try:
             token = auth_header.split(' ')[1]
-            return token == 'admin-token'
+            return token == ADMIN_TOKEN
         except:
             return False
+
+    def send_error(self, code, message=None, explain=None):
+        if code == 404:
+            try:
+                with open('screenshots/error_page.html', 'rb') as f:
+                    content = f.read()
+                self.send_response(404)
+                self.send_header('Content-Type', 'text/html')
+                self.end_headers()
+                self.wfile.write(content)
+                return
+            except FileNotFoundError:
+                pass
+        super().send_error(code, message, explain)
 
     def do_OPTIONS(self):
         self.send_response(200)
@@ -123,63 +160,16 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({'success': False, 'message': 'Missing fields'}).encode())
                 return
 
-            with open(USERS_FILE, 'r') as f:
-                users = json.load(f)
-
-            if any(u.get('email', '').lower() == email for u in users):
-                self._set_headers(400)
-                self.wfile.write(json.dumps({'success': False, 'message': 'User already exists'}).encode())
-                return
-
-            # Generate a simple persistent ID
-            new_id = f"user_{int(time.time())}_{secrets.token_hex(4)}"
-            
-            new_user = {
-                'id': new_id,
-                'email': email,
-                'password_hash': hash_password(password),
-                'name': name,
-                'avatar': None,
-                'cart': [],  # Initialize empty cart
-                'orders': [], # Initialize empty orders
-                'joined': time.time(),
-                'last_login': time.time()
-            }
-            users.append(new_user)
-            with open(USERS_FILE, 'w') as f:
-                json.dump(users, f, indent=2)
-
-            log_system_action('USER_SIGNUP', f"New user signed up: {email}")
-
-            self._set_headers(200)
-            # Return user info without password
-            resp_user = {k:v for k,v in new_user.items() if k != 'password_hash'}
-            self.wfile.write(json.dumps({'success': True, 'user': resp_user, 'token': new_user['id']}).encode())
-
-        elif self.path == '/api/auth/login':
-            length = int(self.headers['Content-Length'])
-            data = json.loads(self.rfile.read(length).decode())
-            
-            email = data.get('email', '').strip().lower()
-            password = data.get('password')
-
-            # Special Admin Check
-            if email == 'gloomhon@gmail.com' and password == 'natureofhouse':
-                 self._set_headers(200)
-                 self.wfile.write(json.dumps({
-                     'success': True, 
-                     'token': 'admin-token', 
-                     'isAdmin': True,
-                     'user': {'name': 'Admin', 'email': email, 'id': 'admin'}
-                 }).encode())
-                 return
 
             with open(USERS_FILE, 'r') as f:
                 users = json.load(f)
 
             user = next((u for u in users if u.get('email', '').lower() == email), None)
             
-            if user and user.get('password_hash') == hash_password(password):
+            # Check password (use salt if exists)
+            salt = user.get('salt', '') if user else ''
+            if user and user.get('password_hash') == hash_password(password, salt):
+
                 # Update Last Login
                 user['last_login'] = time.time()
                 with open(USERS_FILE, 'w') as f: json.dump(users, f, indent=2)
@@ -549,7 +539,35 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self._set_headers(500)
                 self.wfile.write(json.dumps({'success': False, 'message': str(e)}).encode())
 
-        # --- ORDERS (OLD GET) ---
+    def do_GET(self):
+        # --- USER CART LOAD ---
+        if self.path.startswith('/api/user/cart/load'):
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            user_id = params.get('userId', [None])[0]
+            
+            if not user_id:
+                self._set_headers(400)
+                self.wfile.write(json.dumps({'success': False, 'message': 'Missing userId'}).encode())
+                return
+            
+            try:
+                with open(USERS_FILE, 'r') as f:
+                    users = json.load(f)
+                user = next((u for u in users if u['id'] == user_id), None)
+                if user:
+                    self._set_headers(200)
+                    self.wfile.write(json.dumps({'success': True, 'cart': user.get('cart', [])}).encode())
+                else:
+                    self._set_headers(404)
+                    self.wfile.write(json.dumps({'success': False, 'message': 'User not found'}).encode())
+            except Exception as e:
+                self._set_headers(500)
+                self.wfile.write(json.dumps({'success': False, 'message': str(e)}).encode())
+            return
+
+        # --- USER ORDERS ---
         elif self.path.startswith('/api/user/orders'):
             from urllib.parse import urlparse, parse_qs
             parsed = urlparse(self.path)
@@ -562,26 +580,13 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 return
 
             try:
-                # In this system, orders might be stored in a separate ORDERS_FILE or inside NEW_USER
-                # The user request implies isolation, so let's check USERS_FILE for personal 'orders' list first,
-                # or filter ORDERS_FILE by user_id if that's how it's structured.
-                # Given current structure initialized in signup, each user has 'orders'.
-                
-                # Check USERS_FILE first
                 with open(USERS_FILE, 'r') as f:
                     users = json.load(f)
                 
                 user = next((u for u in users if u['id'] == user_id), None)
                 
                 if user:
-                    # Return user specific orders
                     user_orders = user.get('orders', [])
-                    
-                    # Also checking global orders file just in case they are stored there centrally
-                    # and we need to filter.
-                    # with open(ORDERS_FILE, 'r') as f: all_orders = json.load(f)
-                    # user_orders = [o for o in all_orders if o.get('userId') == user_id]
-                    
                     self._set_headers(200)
                     self.wfile.write(json.dumps({'success': True, 'orders': user_orders}).encode())
                 else:
@@ -590,8 +595,46 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self._set_headers(500)
                 self.wfile.write(json.dumps({'success': False, 'message': str(e)}).encode())
+            return
 
-    def do_GET(self):
+        # --- USER PROFILE ---
+        elif self.path.startswith('/api/user/profile'):
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            user_id = params.get('userId', [None])[0]
+            
+            if not user_id:
+                self._set_headers(400)
+                self.wfile.write(json.dumps({'success': False, 'message': 'Missing userId'}).encode())
+                return
+
+            try:
+                with open(USERS_FILE, 'r') as f:
+                    users = json.load(f)
+                
+                user = next((u for u in users if u['id'] == user_id), None)
+                
+                if user:
+                    # Don't send sensitive info like password
+                    safe_user = {
+                        'id': user.get('id'),
+                        'name': user.get('name'),
+                        'identifier': user.get('email') or user.get('identifier'),
+                        'avatar': user.get('avatar'),
+                        'phone': user.get('phone', ''),
+                        'joined': user.get('joined')
+                    }
+                    self._set_headers(200)
+                    self.wfile.write(json.dumps({'success': True, 'user': safe_user}).encode())
+                else:
+                    self._set_headers(404)
+                    self.wfile.write(json.dumps({'success': False, 'message': 'User not found'}).encode())
+            except Exception as e:
+                self._set_headers(500)
+                self.wfile.write(json.dumps({'success': False, 'message': str(e)}).encode())
+            return
+
         # --- ADMIN DATA ENDPOINTS ---
         if self.path.startswith('/api/admin/data/'):
             if not self._is_admin():

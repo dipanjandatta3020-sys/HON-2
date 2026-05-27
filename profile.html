@@ -5,7 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - House of Natures</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta name="description" content="House of Natures - Premium hand-crafted sustainable bamboo furniture, lamps, and eco-friendly products.">
+    <meta property="og:title" content="House of Natures">
+    <meta property="og:description" content="Premium hand-crafted sustainable bamboo furniture and eco-friendly products.">
+    <meta property="og:type" content="website">
+
+    <link rel="stylesheet" href="style.min.css?v=8">
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:wght@400;600&display=swap"
         rel="stylesheet">
@@ -114,25 +120,45 @@
         <button class="logout-btn" id="logout-btn">Log Out</button>
     </div>
 
-    <script src="script_v2.js"></script>
+    <script src="script_v2.js?v=8" defer></script>
     <script>
-        const user = JSON.parse(localStorage.getItem('userInfo') || 'null');
+        const token = localStorage.getItem('userToken');
 
-        if (!user) {
+        if (!token) {
             window.location.href = 'login.html';
         } else {
-            document.getElementById('user-name').innerText = user.name || 'User';
-            document.getElementById('user-info').innerText = user.identifier;
-
-            const avatarDiv = document.getElementById('avatar-display');
-            if (user.avatar) {
-                avatarDiv.innerHTML = `<img src="${user.avatar}" alt="Avatar">`;
-            } else {
-                avatarDiv.innerText = (user.name || 'U').charAt(0).toUpperCase();
-            }
-
+            fetchUserProfile(token);
             // Fetch Orders
             fetchOrders();
+        }
+
+        async function fetchUserProfile(token) {
+            try {
+                const res = await fetch(`/api/user/profile?userId=${token}`);
+                if (!res.ok) throw new Error('Failed to fetch profile');
+                const data = await res.json();
+                
+                if (data.success && data.user) {
+                    const user = data.user;
+                    document.getElementById('user-name').innerText = user.name || 'User';
+                    document.getElementById('user-info').innerText = user.identifier;
+
+                    const avatarDiv = document.getElementById('avatar-display');
+                    if (user.avatar) {
+                        avatarDiv.innerHTML = `<img src="${user.avatar}" alt="Avatar">`;
+                    } else {
+                        avatarDiv.innerText = (user.name || 'U').charAt(0).toUpperCase();
+                    }
+                } else {
+                    localStorage.removeItem('userToken');
+                    localStorage.removeItem('userInfo');
+                    window.location.href = 'login.html';
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('user-name').innerText = 'Error loading profile';
+                document.getElementById('user-info').innerText = '';
+            }
         }
 
         async function fetchOrders() {

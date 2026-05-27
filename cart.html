@@ -5,12 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Cart - HON</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta name="description" content="House of Natures - Premium hand-crafted sustainable bamboo furniture, lamps, and eco-friendly products.">
+    <meta property="og:title" content="House of Natures">
+    <meta property="og:description" content="Premium hand-crafted sustainable bamboo furniture and eco-friendly products.">
+    <meta property="og:type" content="website">
+
+    <link rel="icon" type="image/png" href="Logo_HON-removebg-preview (1).png">
+    <meta name="description" content="Your Cart - HON - Sustainable bamboo products by House of Natures.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4">
+    <link rel="stylesheet" href="style.min.css?v=8">
     <style>
         .cart-page {
             padding-top: 100px;
@@ -143,7 +151,7 @@
         </div>
     </div>
 
-    <script src="script_v2.js"></script>
+    <script src="script_v2.js?v=8" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const cartContent = document.getElementById('cart-content');
@@ -167,8 +175,7 @@
 
                 let subtotal = 0;
 
-                cart.forEach(item => {
-                    // Parse price: Handle both string "Rs. 1,200.00" and number 1200
+                cart.forEach((item, index) => {
                     let priceNum = 0;
                     if (typeof item.price === 'string') {
                         priceNum = parseFloat(item.price.replace(/[^0-9.]/g, ''));
@@ -180,7 +187,7 @@
                     subtotal += itemTotal;
 
                     html += `
-                        <tr>
+                        <tr data-index="${index}">
                             <td>
                                 <div class="cart-item-info">
                                     <img src="${item.image}" alt="${item.title}" class="cart-item-img">
@@ -188,8 +195,13 @@
                                 </div>
                             </td>
                             <td>Rs. ${priceNum.toFixed(2)}</td>
-                            <td>${item.quantity}</td>
+                            <td>
+                                <input type="number" class="cart-qty-input" data-index="${index}" value="${item.quantity}" min="1" style="width:50px; padding:5px;">
+                            </td>
                             <td>Rs. ${itemTotal.toFixed(2)}</td>
+                            <td>
+                                <button class="cart-remove-btn" data-index="${index}" style="background:none; border:none; color:red; cursor:pointer;">&times; Remove</button>
+                            </td>
                         </tr>
                     `;
                 });
@@ -216,6 +228,32 @@
                 `;
 
                 cartContent.innerHTML = html;
+
+                // Wire up quantity changes and removals
+                document.addEventListener('change', (e) => {
+                    if (e.target && e.target.classList.contains('cart-qty-input')) {
+                        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+                        const index = parseInt(e.target.dataset.index);
+                        const newQty = parseInt(e.target.value);
+                        if (newQty > 0 && cart[index]) {
+                            cart[index].quantity = newQty;
+                            localStorage.setItem('cart', JSON.stringify(cart));
+                            window.location.reload();
+                        }
+                    }
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (e.target && e.target.classList.contains('cart-remove-btn')) {
+                        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+                        const index = parseInt(e.target.dataset.index);
+                        if (cart[index]) {
+                            cart.splice(index, 1);
+                            localStorage.setItem('cart', JSON.stringify(cart));
+                            window.location.reload();
+                        }
+                    }
+                });
 
                 // Wire up checkout button (using event delegation since it's dynamically created)
                 document.addEventListener('click', (e) => {
@@ -325,8 +363,6 @@
     </div>
 
     <!-- Razorpay Script -->
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
     <!-- Search Overlay -->
     <div id="search-container">
         <button id="close-search">&times;</button>
