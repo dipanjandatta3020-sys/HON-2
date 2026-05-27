@@ -34,8 +34,6 @@
   object-fit: cover;
   object-position: center;
   will-change: transform;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
 }
 
 /* Overlays — must sit above all slides */

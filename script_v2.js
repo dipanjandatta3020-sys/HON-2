@@ -120,8 +120,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const cardHtml = `
             <div class="product-card ${isCarousel ? 'carousel-card' : ''}" data-id="${product.id}">
                 <div class="product-image">
-                    <img src="${defaultImg}" alt="${product.title}" class="img-default" loading="lazy">
-                    <img src="${hoverImg}" alt="${product.title} Hover" class="img-hover" loading="lazy">
+                    <img src="${defaultImg}" alt="${product.title}" class="img-default">
+                    <img src="${hoverImg}" alt="${product.title} Hover" class="img-hover">
                 </div>
                 <h3 class="product-title">${product.title}</h3>
                 <p class="product-price">₹ ${product.price.toFixed(2)}</p>
