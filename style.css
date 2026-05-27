@@ -30,8 +30,7 @@ body {
 
 
 .content {
-    position: sticky;
-    top: 15vh;
+    position: relative;
     padding: 0;
     max-width: 500px;
     background: transparent;
@@ -169,7 +168,6 @@ p {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    transform: translate3d(0, 0, 0);
     z-index: 100;
     display: flex;
     align-items: center;
@@ -217,8 +215,6 @@ p {
 
 /* Best Sellers Section */
 #best-sellers {
-    position: relative;
-    z-index: 10;
     background: #ffffff;
     padding: 4rem 2rem;
     min-height: 100vh;
@@ -242,16 +238,9 @@ p {
 
 .product-card {
     background: #fff;
-    /* border: 1px solid #f0f0f0; */
-    /* text-align: center; */
-    /* padding: 1rem; */
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
     position: relative;
-    z-index: 10;
-    /* Ensure it's above other elements */
-    pointer-events: auto;
-    /* Force events */
 }
 
 .product-card:hover {
@@ -755,20 +744,13 @@ p {
 
 /* Feature Section (Bamboo Lamps) */
 .feature-section {
-    position: relative;
-    z-index: 10;
     display: flex;
     align-items: stretch;
-    /* Stretch to fill height */
     justify-content: space-between;
     min-height: 60vh;
-    /* Keep consistent height */
     padding: 0;
-    /* Remove padding to allow full bleed */
     background-color: #f7f7f7;
-    /* Very mild grey */
     overflow: hidden;
-    /* Ensure image doesn't spill */
 }
 
 .feature-content {
@@ -871,9 +853,6 @@ p {
 
 /* Bamboo Gifts Carousel */
 #bamboo-gifts {
-    position: relative;
-    z-index: 10;
-    /* Ensure it covers the fixed canvas */
     padding: 4rem 5%;
     background-color: #fff;
     text-align: center;
@@ -993,10 +972,7 @@ p {
 /* Promo/Blog Section */
 #promo-blog-section {
     padding: 2rem 5% 4rem;
-    /* Top padding small, bottom padding larger */
     background-color: #fff;
-    position: relative;
-    z-index: 10;
 }
 
 .promo-grid {
