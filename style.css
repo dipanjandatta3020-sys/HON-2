@@ -6,16 +6,18 @@
 
 html {
     width: 100%;
+    max-width: 100%;
     background-color: #ffffff;
     overflow-x: hidden;
-    overscroll-behavior-x: none;
+    overscroll-behavior: none;
 }
 
 body {
     width: 100%;
+    max-width: 100%;
     min-height: 100vh;
     overflow-x: hidden;
-    overscroll-behavior-x: none;
+    overscroll-behavior: none;
     background-color: #ffffff;
     font-family: 'Outfit', sans-serif;
     color: #1a1a1a;
@@ -415,11 +417,11 @@ p {
 
 @media (max-width: 768px) {
     .logo-brand {
-        max-height: 90px;
+        max-height: 60px;
     }
 
     .logo-main {
-        font-size: 1.6rem;
+        font-size: 1.4rem;
     }
 
     .logo-sub {
@@ -1074,15 +1076,21 @@ p {
         flex-direction: column;
         gap: 1.5rem;
         margin-bottom: 3rem;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .promo-banner {
-        height: 400px;
-        /* Reduce height for mobile */
+        height: 300px;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     #promo-blog-section {
         padding: 2rem 1.5rem 3rem;
+        width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
     }
 
     .blog-posts-header {
@@ -1128,7 +1136,7 @@ p {
     gap: 2rem;
     margin-bottom: 2rem;
     position: relative;
-    z-index: 101;
+    z-index: 1000;
 }
 
 #main-footer .social-icons a {
@@ -1139,11 +1147,13 @@ p {
     justify-content: center;
     background: rgba(255, 255, 255, 0.1);
     /* Slight circle bg for touch target? No, user asked for clean icons. */
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.3);
     /* Optional: add border to make them pop */
+    position: relative;
+    z-index: 1001;
 }
 
 #main-footer .social-icons a:hover {
@@ -1153,9 +1163,10 @@ p {
 }
 
 #main-footer .social-icons svg {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     fill: currentColor;
+    pointer-events: none;
 }
 
 #main-footer .copyright {
