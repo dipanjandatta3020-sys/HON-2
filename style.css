@@ -273,10 +273,8 @@ p {
     position: absolute;
     top: 0;
     left: 0;
-    transition: opacity 0.25s ease-out;
-    /* Faster and smoother */
+    transition: opacity 0.4s ease;
     backface-visibility: hidden;
-    /* Optimize painting */
 }
 
 .img-default {
@@ -286,6 +284,10 @@ p {
 
 .img-hover {
     z-index: 2;
+    opacity: 0;
+}
+
+.product-card:hover .img-default {
     opacity: 0;
 }
 
