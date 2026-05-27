@@ -7,9 +7,8 @@
 html {
     width: 100%;
     max-width: 100%;
-    background-color: #ffffff;
+    background-color: #1a1a1a;
     overflow-x: hidden;
-    overscroll-behavior: none;
 }
 
 body {
@@ -17,7 +16,6 @@ body {
     max-width: 100%;
     min-height: 100vh;
     overflow-x: hidden;
-    overscroll-behavior: none;
     background-color: #ffffff;
     font-family: 'Outfit', sans-serif;
     color: #1a1a1a;
