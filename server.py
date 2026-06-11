@@ -186,6 +186,24 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self._set_headers(401)
                 self.wfile.write(json.dumps({'success': False, 'message': 'Invalid credentials'}).encode())
 
+        elif self.path == '/api/auth/login':
+            length = int(self.headers['Content-Length'])
+            data = json.loads(self.rfile.read(length).decode())
+            
+            email = data.get('email', '').strip()
+            password = data.get('password', '')
+
+            if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
+                self._set_headers(200)
+                self.wfile.write(json.dumps({
+                    'success': True, 
+                    'isAdmin': True,
+                    'token': ADMIN_TOKEN
+                }).encode())
+            else:
+                self._set_headers(401)
+                self.wfile.write(json.dumps({'success': False, 'message': 'Invalid credentials'}).encode())
+
         # --- ADMIN CONFIG (RAZORPAY) ---
         elif self.path == '/api/admin/config/razorpay':
             if not self._is_admin():
